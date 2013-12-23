@@ -1,0 +1,15 @@
+#!/bin/sh
+
+# Pull in sysconfig settings
+
+. /etc/sysconfig/yum-check
+
+if [ ! -f /var/run/yum.pid ]; then
+
+         if [ ${CHECKONLY} = "yes" ]; then
+                /usr/bin/yum-check
+         else
+                /usr/bin/yum -R 10 -e 0 -d 0 -y update yum
+                /usr/bin/yum -R 120 -e 0 -d 0 -y update
+         fi
+fi

@@ -1,0 +1,10 @@
+# yes sets yum to check for updates and mail only if patches are available
+# no does enable autoupdate if /var/lock/subsys/yum is available
+CHECKONLY="yes"
+# defaults to root, leave empty if .forward/alias in place for root
+MAILTO=""
+# Set to yes for debugging only! You'll get a mail for each run!
+CHECKWRK="no"
+# Seconds to randomize startup, if running from cron to balance load
+RANGE="3600"
+

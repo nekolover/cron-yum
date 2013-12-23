@@ -1,0 +1,55 @@
+#!/bin/sh
+#
+# Name:         yum-check
+# Author:       Jonathan Raffre (NekoLover)
+# Function:     Run from cron to check for yum updates
+#               and mail results
+# Version:      1.0
+# Config:       /etc/sysconfig/yum
+
+# Pull in sysconfig settings
+
+. /etc/sysconfig/yum-check
+
+maila=${MAILTO:=root}
+yumdat="/tmp/yum-check-update.$$"
+yumb="/usr/bin/yum"
+
+#  wait a random interval if there is not a controlling terminal, 
+#  for load management
+if ! [ -t ]
+then
+         num=$RANDOM
+         let "num %= ${RANGE:=1}"
+         sleep $num
+fi
+
+rm -f ${yumdat%%[0-9]*}*
+
+$yumb check-update >& $yumdat
+
+yumstatus="$?"
+
+case $yumstatus in
+         100)
+                  cat $yumdat |\
+                  mail -s "Alert: ${HOSTNAME} has new updates !" $maila
+                  exit 0
+;;
+         0)
+                 # Only send mail if debug is turned on
+                 if [ ${CHECKWRK} = "yes" ];then
+                 cat $yumdat |\
+                 mail -s "Yum check succeeded: ${HOSTNAME} has zero updates available." $maila
+                 fi
+                 exit 0
+;;
+         *)
+                 # Unexpected yum return status
+                 (echo "Undefined, yum return status: ${yumstatus}" && \
+                 [ -e "${yumdat}" ] && cat "${yumdat}" )|\
+                 mail -s "Alert: ${HOSTNAME} could not run yum." $maila
+esac
+
+[ -e "${yumdat}" ] && rm ${yumdat}
+
